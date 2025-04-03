@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tile Matching Game</title>
+    <style>
+        .background {
+            border-radius: 250px;
+            background: #AC5D5E;
+            height: 650px;
+            width: 750px;
+            margin-top: 100px;
+            position: absolute;
+            margin-left: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+			bottom: 100px;
+			
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 5px;
+            width: 80%;
+            height: 80%;
+            margin-top: 40px;
+            margin-left: 40px;
+        }
+        .tile {
+            width: 70%;
+            height: 70%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #EFE0A4;
+            border-radius: 5px;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        .tile img {
+            width: 60%;
+            height: 60%;
+            object-fit: contain;
+        }
+        #startButton {
+            font-size: 20px;
+            background-color: #000000;
+            border: dotted;
+            cursor: pointer;
+            color: aqua;
+        }
+        #startButton:hover {
+            background-color: #AA4446;
+        }
+        #modeSelect {
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        #timer {
+            font-size: 24px;
+            color: white;
+            display: none;
+        }
+		
+		@keyframes floatAnimation {
+			0% {transform: translateY(0px);}
+			50% {transform: translateY(20px);}
+			100% {transform: translateY(0px);}
+		}
+		
+		.page-background {
+			
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background: url("background images/pink.png") no-repeat center center;
+			background-size: cover;
+			z-index: -1;
+			animation: floatAnimation 5s infinite ease-in-out;
+			width: 500px;
+			height: 500px;
+			margin-left: 50px;
+			margin-top: 1px;
+			
+		}
+		
+			.page-background2 {
+			
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background: url("background images/leaf 1.png") no-repeat center center;
+			background-size: cover;
+			z-index: -1;
+			animation: floatAnimation 6s infinite ease-in-out;
+			width: 500px;
+			height: 500px;
+			margin-left: 80px;
+			margin-top: 400px;
+			
+		}
+		
+			.page-background3 {
+			
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background: url("background images/multi.png") no-repeat center center;
+			background-size: cover;
+			z-index: -1;
+			animation: floatAnimation 6s infinite ease-in-out;
+			width: 50px;
+			height: 50px;
+			margin-left: 600px;
+			margin-top: 60px;
+				height: 600px;
+				width: 600px;
+			
+		}
+		
+		body {
+			font-family: 'Satisfy', cursive;
+		}
+		
+		
+		
+    </style>
+</head>
+	<style>
+@import url('https://fonts.googleapis.com/css2?family=Satisfy&display=swap');
+</style>
+
+<body style="background-color:#4F95C1">
+    <h1>LINE THE FLOWERS</h1>
+	
+	<div class="page-background"></div>
+	<div class="page-background2"></div>
+	<div class="page-background3"></div>
+	
+	
+
+    <label for="modeSelect">Select Mode:</label>
+    <select id="modeSelect">
+        <option value="timed">Timed Mode</option>
+        <option value="endless">Endless Mode</option>
+    </select>
+
+    <p id="timer">Time left: 60s</p>
+    <button id="startButton">START GAME</button>
+    <h2> SCORE: <span id="score">0</span></h2>
+
+    <div class="background">
+        <div class="game-grid" id="grid"></div>
+    </div>
+
+    <script>
+        let gameMode = "timed";  // Default mode
+        let timeLeft = 60;  // Default timer value
+        let timerInterval;
+        let score = 0;
+
+        const imageLibrary = [
+            "images/flowers.png",
+            "images/sunflower.png",
+            "images/icon.png",
+            "images/blossom.png",
+            "images/tulips.png",
+            "images/pinks.png"
+        ];
+
+        const rows = 4;
+        const cols = 4;
+        let grid = [];
+
+        function getRandomTile() {
+            return imageLibrary[Math.floor(Math.random() * imageLibrary.length)];
+        }
+
+        function initializeGame() {
+            const gridContainer = document.getElementById("grid");
+            gridContainer.innerHTML = "";
+            grid = [];
+            score = 0;
+            document.getElementById("score").innerText = score;
+
+            for (let i = 0; i < rows; i++) {
+                grid[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    const tile = document.createElement("div");
+                    tile.classList.add("tile");
+
+                    const img = document.createElement("img");
+                    img.src = getRandomTile();
+                    tile.appendChild(img);
+
+                    grid[i][j] = img;
+                    tile.addEventListener("click", () => selectTile(i, j));
+                    gridContainer.appendChild(tile);
+                }
+            }
+            setTimeout(checkMatches, 500);
+        }
+
+        let firstTile = null;
+        function selectTile(row, col) {
+            const selectedTile = grid[row][col];
+
+            if (!firstTile) {
+                firstTile = { row, col, element: selectedTile };
+                selectedTile.style.border = "2px solid blue";
+            } else {
+                let tempSrc = firstTile.element.src;
+                firstTile.element.src = selectedTile.src;
+                selectedTile.src = tempSrc;
+                firstTile.element.style.border = "none";
+                firstTile = null;
+                checkMatches();
+            }
+        }
+
+        function checkMatches() {
+            let matchedTiles = new Set();
+            let points = 0;
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols - 2; j++) {
+                    if (grid[i][j].src === grid[i][j + 1].src && grid[i][j].src === grid[i][j + 2].src) {
+                        matchedTiles.add(`${i}-${j}`);
+                        matchedTiles.add(`${i}-${j + 1}`);
+                        matchedTiles.add(`${i}-${j + 2}`);
+                        points += 3;
+                    }
+                }
+            }
+
+            for (let j = 0; j < cols; j++) {
+                for (let i = 0; i < rows - 2; i++) {
+                    if (grid[i][j].src === grid[i + 1][j].src && grid[i][j].src === grid[i + 2][j].src) {
+                        matchedTiles.add(`${i}-${j}`);
+                        matchedTiles.add(`${i + 1}-${j}`);
+                        matchedTiles.add(`${i + 2}-${j}`);
+                        points += 3;
+                    }
+                }
+            }
+
+            if (matchedTiles.size > 0) {
+                matchedTiles.forEach(position => {
+                    let [i, j] = position.split("-").map(Number);
+                    grid[i][j].style.opacity = "0";
+
+                    setTimeout(() => {
+                        grid[i][j].src = getRandomTile();
+                        grid[i][j].style.opacity = "1";
+                    }, 500);
+                });
+
+                score += points;
+                document.getElementById("score").innerText = score;
+
+                setTimeout(checkMatches, 500);
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+            document.getElementById("timer").style.display = "block";
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            alert(`Game Over! Your score is: ${score}`);
+            document.getElementById("startButton").style.display = "block";
+            document.getElementById("timer").style.display = "none";
+            clearInterval(timerInterval);
+        }
+
+        document.getElementById("startButton").addEventListener("click", function() {
+            gameMode = document.getElementById("modeSelect").value;
+            initializeGame();
+            this.style.display = "none";
+			
+			this.style.fontFamily = "'Satisfy', cursive";
+
+            if (gameMode === "timed") {
+                startTimer();
+            } else {
+                document.getElementById("timer").style.display = "none"; // Hide timer in Endless Mode
+            }
+        });
+    </script>
+</body>
+</html>
